@@ -6,9 +6,9 @@ from solver_multigpu import SolverMultigpu
 from utils import process_config
 
 parser = OptionParser()
-parser.add_option("-c", "--conf", dest="configure",  
+parser.add_option("-c", "--conf", dest="configure",
                   help="configure filename")
-(options, args) = parser.parse_args() 
+(options, args) = parser.parse_args()
 if options.configure:
   conf_file = str(options.configure)
 else:

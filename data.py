@@ -19,12 +19,12 @@ from skimage.transform import resize
 
 class DataSet(object):
   """TextDataSet
-  process text input file dataset 
+  process text input file dataset
   text file format:
     image_path
   """
 
-  def __init__(self, common_params=None, dataset_params=None):
+  def __init__(self, common_params=None, dataset_params=None, val_ds=False):
     """
     Args:
       common_params: A dict
@@ -33,18 +33,24 @@ class DataSet(object):
     if common_params:
       self.image_size = int(common_params['image_size'])
       self.batch_size = int(common_params['batch_size'])
-      
+
     if dataset_params:
-      self.data_path = str(dataset_params['path'])
-      self.thread_num = int(int(dataset_params['thread_num']) / 2)
-      self.thread_num2 = int(int(dataset_params['thread_num']) / 2)
+      if val_ds:
+          self.batch_size = int(1)
+          self.data_path = str(dataset_params['val_path'])
+          self.thread_num = int(2)
+          self.thread_num2 = int(2)
+      else:
+          self.data_path = str(dataset_params['path'])
+          self.thread_num = int(int(dataset_params['thread_num']) / 2)
+          self.thread_num2 = int(int(dataset_params['thread_num']) / 2)
     #record and image_label queue
     self.record_queue = Queue(maxsize=10000)
     self.image_queue = Queue(maxsize=5000)
 
     self.batch_queue = Queue(maxsize=100)
 
-    self.record_list = []  
+    self.record_list = []
 
     # filling the record_list
     input_file = open(self.data_path, 'r')
@@ -83,8 +89,8 @@ class DataSet(object):
       self.record_point += 1
 
   def image_process(self, image):
-    """record process 
-    Args: record 
+    """record process
+    Args: record
     Returns:
       image: 3-D ndarray
     """
@@ -110,23 +116,26 @@ class DataSet(object):
     return image
 
   def record_customer(self):
-    """record queue's customer 
+    """record queue's customer
     """
     while True:
       item = self.record_queue.get()
       out = cv2.imread(item)
       if len(out.shape)==3 and out.shape[2]==3:
-        self.image_queue.put(out)
+        self.image_queue.put((out, os.path.basename(item)))
+
   def image_customer(self):
     while True:
       images = []
+      names = []
       for i in range(self.batch_size):
-        image = self.image_queue.get()
+        image, name = self.image_queue.get()
         image = self.image_process(image)
         images.append(image)
+        names.append(name)
       images = np.asarray(images, dtype=np.uint8)
 
-      self.batch_queue.put(preprocess(images))
+      self.batch_queue.put(preprocess(images, names))
 
   def batch(self):
     """get batch

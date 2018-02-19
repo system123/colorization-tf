@@ -40,7 +40,7 @@ class Net(object):
     #conv2
     temp_conv = conv2d('conv' + str(conv_num), temp_conv, [3, 3, 64, 128], stride=1, wd=self.weight_decay)
     conv_num += 1
-    
+
     temp_conv = conv2d('conv' + str(conv_num), temp_conv, [3, 3, 128, 128], stride=2, wd=self.weight_decay)
     conv_num += 1
 
@@ -48,9 +48,9 @@ class Net(object):
     #conv3
     temp_conv = conv2d('conv' + str(conv_num), temp_conv, [3, 3, 128, 256], stride=1, wd=self.weight_decay)
     conv_num += 1
-    
+
     temp_conv = conv2d('conv' + str(conv_num), temp_conv, [3, 3, 256, 256], stride=1, wd=self.weight_decay)
-    conv_num += 1    
+    conv_num += 1
 
     temp_conv = conv2d('conv' + str(conv_num), temp_conv, [3, 3, 256, 256], stride=2, wd=self.weight_decay)
     conv_num += 1
@@ -59,11 +59,11 @@ class Net(object):
     #conv4
     temp_conv = conv2d('conv' + str(conv_num), temp_conv, [3, 3, 256, 512], stride=1, wd=self.weight_decay)
     conv_num += 1
-    
+
     temp_conv = conv2d('conv' + str(conv_num), temp_conv, [3, 3, 512, 512], stride=1, wd=self.weight_decay)
     conv_num += 1
 
-    
+
     temp_conv = conv2d('conv' + str(conv_num), temp_conv, [3, 3, 512, 512], stride=1, wd=self.weight_decay)
     conv_num += 1
 
@@ -71,7 +71,7 @@ class Net(object):
 
     #conv5
     temp_conv = conv2d('conv' + str(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, wd=self.weight_decay)
-    conv_num += 1    
+    conv_num += 1
 
 
 
@@ -84,15 +84,15 @@ class Net(object):
     temp_conv = batch_norm('bn_5', temp_conv,train=self.train)
     #conv6
     temp_conv = conv2d('conv' + str(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, wd=self.weight_decay)
-    conv_num += 1    
+    conv_num += 1
 
     temp_conv = conv2d('conv' + str(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, wd=self.weight_decay)
     conv_num += 1
 
     temp_conv = conv2d('conv' + str(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, wd=self.weight_decay)
-    conv_num += 1    
+    conv_num += 1
 
-    temp_conv = batch_norm('bn_6', temp_conv,train=self.train)    
+    temp_conv = batch_norm('bn_6', temp_conv,train=self.train)
     #conv7
     temp_conv = conv2d('conv' + str(conv_num), temp_conv, [3, 3, 512, 512], stride=1, wd=self.weight_decay)
     conv_num += 1
@@ -106,7 +106,7 @@ class Net(object):
     temp_conv = batch_norm('bn_7', temp_conv,train=self.train)
     #conv8
     temp_conv = deconv2d('conv' + str(conv_num), temp_conv, [4, 4, 512, 256], stride=2, wd=self.weight_decay)
-    conv_num += 1    
+    conv_num += 1
 
     temp_conv = conv2d('conv' + str(conv_num), temp_conv, [3, 3, 256, 256], stride=1, wd=self.weight_decay)
     conv_num += 1
@@ -120,16 +120,17 @@ class Net(object):
 
     conv8_313 = temp_conv
     return conv8_313
+
   def loss(self, scope, conv8_313, prior_boost_nongray, gt_ab_313):
-    
+
     flat_conv8_313 = tf.reshape(conv8_313, [-1, 313])
     flat_gt_ab_313 = tf.reshape(gt_ab_313, [-1,313])
     g_loss = tf.reduce_sum(tf.nn.softmax_cross_entropy_with_logits(flat_conv8_313, flat_gt_ab_313)) / (self.batch_size)
-    
-    tf.summary.scalar('weight_loss', tf.add_n(tf.get_collection('losses', scope=scope)))
-    #
-    dl2c = tf.gradients(g_loss, conv8_313)
-    dl2c = tf.stop_gradient(dl2c)
-    #
-    new_loss = tf.reduce_sum(dl2c * conv8_313 * prior_boost_nongray) + tf.add_n(tf.get_collection('losses', scope=scope))
+    new_loss = None
+    if self.train:
+        tf.summary.scalar('weight_loss', tf.add_n(tf.get_collection('losses', scope=scope)))
+        dl2c = tf.gradients(g_loss, conv8_313)
+        dl2c = tf.stop_gradient(dl2c)
+        new_loss = tf.reduce_sum(dl2c * conv8_313 * prior_boost_nongray) + tf.add_n(tf.get_collection('losses', scope=scope))
+
     return new_loss, g_loss

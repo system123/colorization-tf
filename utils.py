@@ -166,7 +166,7 @@ class PriorFactor():
         self.uni_probs[self.prior_probs!=0] = 1.
         self.uni_probs = self.uni_probs/np.sum(self.uni_probs)
 
-        # convex combination of empirical prior and uniform distribution       
+        # convex combination of empirical prior and uniform distribution
         self.prior_mix = (1-self.gamma)*self.prior_probs + self.gamma*self.uni_probs
 
         # set prior factor
@@ -217,14 +217,14 @@ def _prior_boost(gt_ab_313):
   return prior_boost
 
 
-def preprocess(data):
+def preprocess(data, names=[]):
   '''Preprocess
-  Args: 
+  Args:
     data: RGB batch (N * H * W * 3)
   Return:
     data_l: L channel batch (N * H * W * 1)
     gt_ab_313: ab discrete channel batch (N * H/4 * W/4 * 313)
-    prior_boost_nongray: (N * H/4 * W/4 * 1) 
+    prior_boost_nongray: (N * H/4 * W/4 * 1)
   '''
   warnings.filterwarnings("ignore")
   N = data.shape[0]
@@ -254,7 +254,7 @@ def preprocess(data):
   #gt_ab_313: [N, H/4, W/4, 313]
   gt_ab_313 = _nnencode(data_ab_ss)
 
-  #Prior_Boost 
+  #Prior_Boost
   #prior_boost: [N, 1, H/4, W/4]
   prior_boost = _prior_boost(gt_ab_313)
 
@@ -262,7 +262,7 @@ def preprocess(data):
   #prior_boost_nongray: [N, 1, H/4, W/4]
   prior_boost_nongray = prior_boost * nongray_mask
 
-  return data_l, gt_ab_313, prior_boost_nongray
+  return data_l, gt_ab_313, prior_boost_nongray, names
 
 def softmax(x):
     """Compute softmax values for each sets of scores in x."""
@@ -287,7 +287,7 @@ def decode(data_l, conv8_313, rebalance=1):
   class8_313_rh = softmax(conv8_313_rh)
 
   cc = np.load(os.path.join(enc_dir, 'pts_in_hull.npy'))
-  
+
   data_ab = np.dot(class8_313_rh, cc)
   data_ab = resize(data_ab, (height, width))
   img_lab = np.concatenate((data_l, data_ab), axis=-1)
@@ -298,9 +298,9 @@ def decode(data_l, conv8_313, rebalance=1):
 def get_data_l(image_path):
   """
   Args:
-    image_path  
+    image_path
   Returns:
-    data_l 
+    data_l
   """
   data = imread(image_path)
   data = data[None, :, :, :]
@@ -311,9 +311,9 @@ def get_data_l(image_path):
   return data, data_l
 
 def process_config(conf_file):
-  """process configure file to generate CommonParams, DataSetParams, NetParams 
+  """process configure file to generate CommonParams, DataSetParams, NetParams
   Args:
-    conf_file: configure file path 
+    conf_file: configure file path
   Returns:
     CommonParams, DataSetParams, NetParams, SolverParams
   """
