@@ -152,5 +152,5 @@ class Solver(object):
           saver.save(sess, checkpoint_path, global_step=step)
 
         if step % self.val_every == 0:
-          val_loss = validate_model(sess, summary_writer)
+          val_loss = self.validate_model(sess, summary_writer)
           print("%s: step %d, val_loss = %.3f ****" % (datetime.now(), step, val_loss))
