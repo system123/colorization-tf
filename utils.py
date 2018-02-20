@@ -82,7 +82,7 @@ class NNEncode():
         self.K = self.cc.shape[0]
         self.NN = int(NN)
         self.sigma = sigma
-        self.nbrs = nn.NearestNeighbors(n_neighbors=NN, algorithm='ball_tree').fit(self.cc)
+        self.nbrs = nn.NearestNeighbors(n_neighbors=self.NN, algorithm='ball_tree').fit(self.cc)
 
         self.alreadyUsed = False
 
