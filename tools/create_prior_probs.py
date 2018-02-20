@@ -1,12 +1,18 @@
-import tensorflow as tf 
+import tensorflow as tf
 import numpy as np
 from skimage.io import imread
 from skimage import color
 import sys
 import random
 from skimage.transform import resize
+from optparse import OptionParser
 
-lists_f = open('data/train.txt')
+parser = OptionParser()
+parser.add_option("-f", "--file", dest="file_path",
+                  help="Path for the txt file containing training images")
+(options, args) = parser.parse_args()
+
+lists_f = open(options.file_path)
 points = np.load('resources/pts_in_hull.npy')
 points = points.astype(np.float64)
 points = points[None, :, :]
