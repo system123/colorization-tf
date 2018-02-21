@@ -55,8 +55,9 @@ class Solver(object):
 
   def validate_model(self, sess, summary_writer, summary_op, train_it):
       avg_loss = 0.0
-      imgs_out_path = os.path.exists(os.path.join(self.train_dir, "validation", str(train_it//self.val_every)))
-      os.makedirs(imgs_out_path, exist_ok=True)
+      imgs_out_path = os.path.join(self.train_dir, "validation", str(train_it//self.val_every))
+      if os.path.exists(imgs_out_path):
+        os.makedirs(imgs_out_path)
 
       for step in xrange(self.max_val_steps):
         data_l, gt_ab_313, prior_boost_nongray, img_names = self.test_dataset.batch()
