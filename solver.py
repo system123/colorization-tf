@@ -62,10 +62,10 @@ class Solver(object):
 
       for step in xrange(self.max_val_steps):
         data_l, gt_ab_313, prior_boost_nongray, img_names = self.test_dataset.batch()
-        summary_str, conv8_313 = sess.run([summary_op, self.vconv8_313], feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray})
+        summary_str, conv8_313 = sess.run([summary_op, self.conv8_313], feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray})
         summary_writer.add_summary(summary_str, step)
 
-        img_rgb = decode(data_l[0,...], conv8_313[0,...], 2.63)
+        img_rgb = decode(data_l, conv8_313, 2.63)
         imsave(os.path.join(imgs_out_path, img_names[0]), img_rgb)
 
   def train_model(self):
