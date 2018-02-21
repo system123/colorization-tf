@@ -36,51 +36,35 @@ class Solver(object):
 
     self.train = train
     self.net = Net(train=train, common_params=common_params, net_params=net_params)
+    self.val_net = Net(train=False, common_params=common_params, net_params=net_params)
     self.dataset = DataSet(common_params=common_params, dataset_params=dataset_params)
     self.test_dataset = DataSet(common_params=common_params, dataset_params=dataset_params, val_ds=True)
 
-  def construct_graph(self, scope, val=False):
+  def construct_graph(self, scope):
     with tf.device('/gpu:' + str(self.device_id)):
       self.data_l = tf.placeholder(tf.float32, (self.batch_size, self.height, self.width, 1))
       self.gt_ab_313 = tf.placeholder(tf.float32, (self.batch_size, int(self.height / 4), int(self.width / 4), 313))
       self.prior_boost_nongray = tf.placeholder(tf.float32, (self.batch_size, int(self.height / 4), int(self.width / 4), 1))
 
-      self.net.train = not val
       self.conv8_313 = self.net.inference(self.data_l)
       new_loss, g_loss = self.net.loss(scope, self.conv8_313, self.prior_boost_nongray, self.gt_ab_313)
-      self.net.train = val
 
-      if val:
-          tf.summary.scalar('new_loss_val', new_loss)
-          tf.summary.scalar('total_loss_val', g_loss)
-      else:
-          tf.summary.scalar('new_loss', new_loss)
-          tf.summary.scalar('total_loss', g_loss)
+      tf.summary.scalar('new_loss', new_loss)
+      tf.summary.scalar('total_loss', g_loss)
     return new_loss, g_loss
 
-  def validate_model(self, sess, summary_writer, train_it):
-    with tf.device('/gpu:' + str(self.device_id)):
-
-      with tf.name_scope('gpu') as scope:
-        new_loss, self.total_val_loss = self.construct_graph(scope, val=True)
-        self.val_summaries = tf.get_collection(tf.GraphKeys.SUMMARIES, scope)
-
-      summary_op = tf.summary.merge(self.val_summaries)
+  def validate_model(self, sess, summary_writer, summary_op, train_it):
       avg_loss = 0.0
-
       imgs_out_path = os.path.exists(os.path.join(self.train_dir, "validation", str(train_it//self.val_every)))
       os.makedirs(imgs_out_path, exist_ok=True)
 
       for step in xrange(self.max_val_steps):
         data_l, gt_ab_313, prior_boost_nongray, img_names = self.test_dataset.batch()
-        summary_str, conv8_313, loss_value = sess.run([summary_op, self.conv8_313, self.total_val_loss], feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray})
+        summary_str, conv8_313 = sess.run([summary_op, self.vconv8_313], feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray})
         summary_writer.add_summary(summary_str, step)
-        avg_loss += loss_value
 
         img_rgb = decode(data_l[0,...], conv8_313[0,...], 2.63)
         imsave(os.path.join(imgs_out_path, img_names[0]), img_rgb)
-
-      return (avg_loss/self.max_val_steps)
 
   def train_model(self):
     with tf.device('/gpu:' + str(self.device_id)):
@@ -121,6 +105,8 @@ class Solver(object):
       #saver1.restore(sess, './models/model.ckpt')
       #nilboy
       summary_writer = tf.summary.FileWriter(self.train_dir, sess.graph)
+      summary_val_writer = tf.summary.FileWriter(os.path.join(self.train_dir, "validation"))
+
       for step in xrange(self.max_steps):
         start_time = time.time()
         t1 = time.time()
@@ -152,5 +138,4 @@ class Solver(object):
           saver.save(sess, checkpoint_path, global_step=step)
 
         if step % self.val_every == 0:
-          val_loss = self.validate_model(sess, summary_writer, step)
-          print("%s: step %d, val_loss = %.3f ****" % (datetime.now(), step, val_loss))
+          self.validate_model(sess, summary_val_writer, summary_op, step)
