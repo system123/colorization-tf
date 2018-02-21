@@ -29,6 +29,7 @@ class Solver(object):
       self.learning_rate = float(solver_params['learning_rate'])
       self.moment = float(solver_params['moment'])
       self.max_steps = int(solver_params['max_iterators'])
+      self.max_val_steps = int(solver_params['max_val_iterations'])
       self.val_every = int(solver_params['val_every'])
       self.train_dir = str(solver_params['train_dir'])
       self.lr_decay = float(solver_params['lr_decay'])
