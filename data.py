@@ -36,7 +36,6 @@ class DataSet(object):
 
     if dataset_params:
       if val_ds:
-          self.batch_size = int(1)
           self.data_path = str(dataset_params['val_path'])
           self.thread_num = int(2)
           self.thread_num2 = int(2)

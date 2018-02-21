@@ -8,6 +8,7 @@ import re
 from skimage.io import imsave
 
 from ops import *
+from utils import *
 from net import Net
 from data import DataSet
 import time
@@ -65,8 +66,9 @@ class Solver(object):
         summary_str, conv8_313 = sess.run([summary_op, self.conv8_313], feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray})
         summary_writer.add_summary(summary_str, step)
 
-        img_rgb = decode(data_l, conv8_313, 2.63)
-        imsave(os.path.join(imgs_out_path, img_names[0]), img_rgb)
+        for i in range(0, conv8_313.shape[0]):
+            img_rgb = decode(data_l[i,:], conv8_313[i,:], 2.63)
+            imsave(os.path.join(imgs_out_path, img_names[i]), img_rgb)
 
   def train_model(self):
     with tf.device('/gpu:' + str(self.device_id)):
