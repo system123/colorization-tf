@@ -279,9 +279,9 @@ def decode(data_l, conv8_313, rebalance=1):
     img_rgb  : [height, width, 3]
   """
   data_l = data_l + 50
-  _, height, width, _ = data_l.shape
-  data_l = data_l[0, :, :, :]
-  conv8_313 = conv8_313[0, :, :, :]
+  height, width, _ = data_l.shape
+  data_l = data_l[:, :, :]
+  conv8_313 = conv8_313[:, :, :]
   enc_dir = './resources'
   conv8_313_rh = conv8_313 * rebalance
   class8_313_rh = softmax(conv8_313_rh)
