@@ -120,7 +120,7 @@ class DataSet(object):
     while True:
       item = self.record_queue.get()
       out = cv2.imread(item)
-      if len(out.shape)==3 and out.shape[2]==3:
+      if out and len(out.shape)==3 and out.shape[2]==3:
         self.image_queue.put((out, os.path.basename(item)))
 
   def image_customer(self):
