@@ -36,6 +36,7 @@ class Solver(object):
       self.lr_decay = float(solver_params['lr_decay'])
       self.decay_steps = int(solver_params['decay_steps'])
       self.checkpoint = str(solver_params['checkpoint'])
+      self.current_iter = int(solver_params['checkpoint_iter'])
 
     self.train = train
     self.net = Net(train=train, common_params=common_params, net_params=net_params)
@@ -108,16 +109,19 @@ class Solver(object):
       sess = tf.Session(config=config)
       sess.run(init)
 
+      start_iter = 0
+
       if len(self.checkpoint) > 0:
           print("Loading checkpoint from file...")
           saver1.restore(sess, self.checkpoint)
+          start_iter = self.checkpoint_iter
 
       #saver1.restore(sess, './models/model.ckpt')
       #nilboy
       summary_writer = tf.summary.FileWriter(self.train_dir, sess.graph)
       summary_val_writer = tf.summary.FileWriter(os.path.join(self.train_dir, "validation"))
 
-      for step in xrange(self.max_steps):
+      for step in xrange(start_iter, self.max_steps):
         start_time = time.time()
         t1 = time.time()
         data_l, gt_ab_313, prior_boost_nongray, _ = self.dataset.batch()
