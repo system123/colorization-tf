@@ -35,6 +35,7 @@ class Solver(object):
       self.train_dir = str(solver_params['train_dir'])
       self.lr_decay = float(solver_params['lr_decay'])
       self.decay_steps = int(solver_params['decay_steps'])
+      self.checkpoint = str(solver_params['checkpoint'])
 
     self.train = train
     self.net = Net(train=train, common_params=common_params, net_params=net_params)
@@ -106,6 +107,11 @@ class Solver(object):
       config.gpu_options.allow_growth = True
       sess = tf.Session(config=config)
       sess.run(init)
+
+      if len(self.checkpoint) > 0:
+          print("Loading checkpoint from file...")
+          saver1.restore(sess, self.checkpoint)
+
       #saver1.restore(sess, './models/model.ckpt')
       #nilboy
       summary_writer = tf.summary.FileWriter(self.train_dir, sess.graph)
