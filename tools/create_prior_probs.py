@@ -39,7 +39,7 @@ for img_f in filename_lists:
   img_f = img_f.strip()
   img = imread(img_f)
   #img = resize(img, (224, 224), preserve_range=True)
-  if len(img.shape)!=3 or img.shape[2]!=3:
+  if img is None or len(img.shape)!=3 or img.shape[2]!=3:
     continue
   img_lab = color.rgb2lab(img)
   img_lab = img_lab.reshape((-1, 3))
