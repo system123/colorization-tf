@@ -36,8 +36,8 @@ def _variable_with_weight_decay(name, shape, stddev, wd):
  Returns:
     Variable Tensor 
   """
-  var = _variable(name, shape,
-    tf.truncated_normal_initializer(stddev=stddev, dtype=tf.float32))
+  # var = _variable(name, shape, tf.truncated_normal_initializer(stddev=stddev, dtype=tf.float32))
+  var = _variable(name, shape, tf.contrib.layers.xavier_initializer())
   if wd is not None:
     weight_decay = tf.multiply(tf.nn.l2_loss(var), wd, name='weight_loss')
     tf.add_to_collection('losses', weight_decay)
