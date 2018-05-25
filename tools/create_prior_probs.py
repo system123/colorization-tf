@@ -37,8 +37,13 @@ sess = tf.Session(config=config)
 
 for img_f in filename_lists:
   img_f = img_f.strip()
-  img = imread(img_f)
-  #img = resize(img, (224, 224), preserve_range=True)
+  try:
+    img = imread(img_f)
+  except:
+    print('Failed to load '+img_f)
+    sys.stdout.flush()
+    continue
+  img = resize(img, (256, 256), preserve_range=True)
   if img is None or len(img.shape)!=3 or img.shape[2]!=3:
     continue
   img_lab = color.rgb2lab(img)
@@ -54,4 +59,4 @@ for img_f in filename_lists:
 sess.close()
 probs = probs / np.sum(probs)
 
-np.save('probs', probs)
+np.save('resources/prior_probs', probs)
