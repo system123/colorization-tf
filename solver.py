@@ -76,7 +76,11 @@ class Solver(object):
 
   def train_model(self):
     with tf.device('/gpu:' + str(self.device_id)):
-      self.global_step = tf.get_variable('global_step', [], initializer=tf.constant_initializer(0), trainable=False)
+      start_iter = 0
+      if len(self.current_iter > 0):
+          start_iter = self.current_iter + 1
+
+      self.global_step = tf.get_variable('global_step', [], initializer=tf.constant_initializer(start_iter), trainable=False)
       learning_rate = tf.train.exponential_decay(self.learning_rate, self.global_step, self.decay_steps, self.lr_decay, staircase=True)
       opt = tf.train.AdamOptimizer(learning_rate=learning_rate, beta2=0.99)
 
@@ -110,13 +114,9 @@ class Solver(object):
       sess = tf.Session(config=config)
       sess.run(init)
 
-      start_iter = 0
-
       if len(self.checkpoint) > 0:
           print("Loading checkpoint from file...")
           saver1.restore(sess, self.checkpoint)
-          start_iter = self.current_iter + 1
-          self.global_step.assign(start_iter).eval()
 
       #saver1.restore(sess, './models/model.ckpt')
       #nilboy
