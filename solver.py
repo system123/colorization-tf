@@ -38,6 +38,7 @@ class Solver(object):
       self.checkpoint = str(solver_params['checkpoint'])
       self.current_iter = int(solver_params['checkpoint_iter'])
 
+    self.val_iter = 0
     self.train = train
     self.net = Net(train=train, common_params=common_params, net_params=net_params)
     self.val_net = Net(train=False, common_params=common_params, net_params=net_params)
@@ -66,7 +67,8 @@ class Solver(object):
       for step in xrange(self.max_val_steps):
         data_l, gt_ab_313, prior_boost_nongray, img_names = self.test_dataset.batch()
         summary_str, conv8_313 = sess.run([summary_op, self.conv8_313], feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray})
-        summary_writer.add_summary(summary_str, step)
+        summary_writer.add_summary(summary_str, self.val_iter)
+        self.val_iter += 1
 
         for i in range(0, conv8_313.shape[0]):
             img_rgb = decode(data_l[i,:], conv8_313[i,:], 2.63)
@@ -75,9 +77,9 @@ class Solver(object):
   def train_model(self):
     with tf.device('/gpu:' + str(self.device_id)):
       self.global_step = tf.get_variable('global_step', [], initializer=tf.constant_initializer(0), trainable=False)
-      learning_rate = tf.train.exponential_decay(self.learning_rate, self.global_step,
-                                           self.decay_steps, self.lr_decay, staircase=True)
+      learning_rate = tf.train.exponential_decay(self.learning_rate, self.global_step, self.decay_steps, self.lr_decay, staircase=True)
       opt = tf.train.AdamOptimizer(learning_rate=learning_rate, beta2=0.99)
+
       with tf.name_scope('gpu') as scope:
         new_loss, self.total_loss = self.construct_graph(scope)
         self.summaries = tf.get_collection(tf.GraphKeys.SUMMARIES, scope)
@@ -94,8 +96,7 @@ class Solver(object):
       for var in tf.trainable_variables():
         self.summaries.append(tf.summary.histogram(var.op.name, var))
 
-      variable_averages = tf.train.ExponentialMovingAverage(
-          0.999, self.global_step)
+      variable_averages = tf.train.ExponentialMovingAverage(0.999, self.global_step)
       variables_averages_op = variable_averages.apply(tf.trainable_variables())
 
       train_op = tf.group(apply_gradient_op, variables_averages_op)
@@ -114,7 +115,8 @@ class Solver(object):
       if len(self.checkpoint) > 0:
           print("Loading checkpoint from file...")
           saver1.restore(sess, self.checkpoint)
-          start_iter = self.checkpoint_iter
+          start_iter = self.current_iter + 1
+          self.global_step.assign(start_iter).eval()
 
       #saver1.restore(sess, './models/model.ckpt')
       #nilboy
