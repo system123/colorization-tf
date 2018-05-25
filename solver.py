@@ -77,7 +77,7 @@ class Solver(object):
   def train_model(self):
     with tf.device('/gpu:' + str(self.device_id)):
       start_iter = 0
-      if len(self.current_iter > 0):
+      if self.current_iter > 0:
           start_iter = self.current_iter + 1
 
       self.global_step = tf.get_variable('global_step', [], initializer=tf.constant_initializer(start_iter), trainable=False)
