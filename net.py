@@ -15,9 +15,10 @@ import sys
 
 class Net(object):
 
-  def __init__(self, train=True, common_params=None, net_params=None):
+  def __init__(self, train=True, common_params=None, net_params=None, ret_layer='conv8_313'):
     self.train = train
     self.weight_decay = 0.0
+    self.ret_layer = ret_layer
     if common_params:
       gpu_nums = len(str(common_params['gpus']).split(','))
       self.batch_size = int(int(common_params['batch_size'])/gpu_nums)
@@ -35,7 +36,6 @@ class Net(object):
     conv_num += 1
 
     #self.nilboy = temp_conv
-
     temp_conv = batch_norm('bn_1', temp_conv,train=self.train)
     #conv2
     temp_conv = conv2d('conv' + str(conv_num), temp_conv, [3, 3, 64, 128], stride=1, wd=self.weight_decay)
@@ -102,6 +102,7 @@ class Net(object):
 
     temp_conv = conv2d('conv' + str(conv_num), temp_conv, [3, 3, 512, 512], stride=1, wd=self.weight_decay)
     conv_num += 1
+    conv7_3 = temp_conv
 
     temp_conv = batch_norm('bn_7', temp_conv,train=self.train)
     #conv8
@@ -119,7 +120,13 @@ class Net(object):
     conv_num += 1
 
     conv8_313 = temp_conv
-    return conv8_313
+
+    if self.ret_layer == "conv7_3":
+        ret_val = conv7_3
+    else:
+        ret_val = conv8_313
+
+    return ret_val
 
   def loss(self, scope, conv8_313, prior_boost_nongray, gt_ab_313):
 
