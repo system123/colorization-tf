@@ -15,7 +15,7 @@ if len(img.shape) == 3:
   img = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
 
 img = img[None, :, :, None]
-data_l = (img.astype(dtype=np.float32)) / 255.0 * 100 - 50
+data_l = img.astype(dtype=np.float32) #/ 255.0 * 100 - 50
 
 #data_l = tf.placeholder(tf.float32, shape=(None, None, None, 1))
 autocolor = Net(train=False, ret_layer='conv7_3')
@@ -24,8 +24,10 @@ conv7_3 = autocolor.inference(data_l)
 
 saver = tf.train.Saver()
 with tf.Session() as sess:
-  saver.restore(sess, 'models/model.ckpt')
+  saver.restore(sess, '/work/ne63wog/zhang_ImgNetPriors180703/model.ckpt-157000')
   conv7_3 = sess.run(conv7_3)
+
+conv7_3 = np.transpose(conv7_3, (0,3,1,2))
 
 npz_fn = os.path.basename(filename).replace('png', 'npz')
 npz_fn = os.path.join(out_dir, npz_fn)
