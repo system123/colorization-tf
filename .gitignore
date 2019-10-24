@@ -1,2 +1,7 @@
 *.pyc
 conf/*
+*.npz
+datum/
+data/
+models/
+results/
